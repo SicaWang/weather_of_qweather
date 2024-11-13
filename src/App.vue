@@ -50,20 +50,20 @@
 </template>
 
 <script setup>
-import { computed, onBeforeMount, ref } from 'vue'
-import SearchLocation from '@/components/SearchLocation.vue'
-import CurrentWeather from '@/components/CurrentWeather.vue';
-import AirQuality from '@/components/AirQuality.vue';
-import Forecast from '@/components/Forecast.vue'
 import {
-  getCityInfo,
-  getWeatherInfo,
   getAirInfo,
+  getCityInfo,
   getForecastInfo,
   getPreForecastInfo,
-  getUltravioletInfo
-} from '@/api/weather.js'
-import { getPreFormattedDate } from '@/utils/utilsFunc.js'
+  getUltravioletInfo,
+  getWeatherInfo
+} from '@/api/weather.js';
+import AirQuality from '@/components/AirQuality.vue';
+import CurrentWeather from '@/components/CurrentWeather.vue';
+import Forecast from '@/components/Forecast.vue';
+import SearchLocation from '@/components/SearchLocation.vue';
+import { getPreFormattedDate } from '@/utils/utilsFunc.js';
+import { computed, onBeforeMount, ref } from 'vue';
 
 const stateNavigator = ref(0) // 用于判断是否加载loading
 const cityList = ref([])
@@ -85,35 +85,53 @@ const infoIsNull = computed(()=>{
 // 获取城市信息
 const weatherLocation = async (query) => {
   // 获取城市信息
-  const cityRes = await getCityInfo({location: query})
-  city.value = cityRes.location[0] || {}
+  const cityRes = await getCityInfo({ location: query });
+
+  // 检查 cityRes 和 cityRes.location 是否有效
+  if (!cityRes || !cityRes.location || cityRes.location.length === 0) {
+    window.alert("Could not get city information");
+    return;
+  }
+
+  city.value = cityRes.location[0];
   // 搜索可能会有多个结果，先存一下，后面用
-  cityList.value = cityRes.location
-  weatherInfo(city.value)
+  cityList.value = cityRes.location;
+  weatherInfo(city.value);
 }
 
+
 const weatherInfo = (cityInfo, isRequestForecast = true) => {
-  // 城市经纬度
-  const { lon, lat } = cityInfo
-  const location = `${lon},${lat}`
+  const { lon, lat } = cityInfo;
+  const location = `${lon},${lat}`;
+
   // 获取实时天气预报
-  getWeatherInfo({location}).then(res => { weather.value = res.now || {} })
+  getWeatherInfo({ location }).then(res => {
+    weather.value = res?.now ?? {}; // 使用可选链和空值合并，确保返回空对象而不是 undefined
+  });
+
   // 获取实时空气质量
-  getAirInfo({location}).then(res => { air.value = res.now|| {} })
+  getAirInfo({ location }).then(res => {
+    air.value = res?.now ?? {}; // 同样处理
+  });
+
   // 获取10天天气预报
-  isRequestForecast && getForecastInfo({location}).then(res => { 
-    res.daily[0].isToday = true
-    const temparr = res.daily || []
+  isRequestForecast && getForecastInfo({ location }).then(res => {
+    res.daily?.[0] && (res.daily[0].isToday = true);
+    const temparr = res?.daily ?? []; // 如果 daily 不存在，则使用空数组
+
     // 获取昨日天气预报
     getPreForecastInfo({ location: cityInfo.id, date: getPreFormattedDate() }).then(res => {
-      res?.weatherDaily && temparr.unshift({...res.weatherDaily, isPreDay: true})
-      forecast.value = temparr
-      preDayWeather.value = res.weatherHourly
-    })
-  })
+      res?.weatherDaily && temparr.unshift({ ...res.weatherDaily, isPreDay: true });
+      forecast.value = temparr;
+      preDayWeather.value = res?.weatherHourly ?? []; // 如果 weatherHourly 不存在，则使用空数组
+    });
+  });
+
   // 获取太阳辐射（紫外线）
-  getUltravioletInfo({location}).then(res => { ultraviolet.value = res.radiation || [] })
-}
+  getUltravioletInfo({ location }).then(res => {
+    ultraviolet.value = res?.radiation ?? []; // 如果 radiation 不存在，则使用空数组
+  });
+};
 
 // 通过经纬度查询天气预报信息（不传参就是当前位置查询）
 async function getLocation(query) {
@@ -148,7 +166,7 @@ function locationBySearch(query) {
 }
 
 onBeforeMount(()=>{
-  getLocation()
+  getLocation('郑州市')
 })
 </script>
 
