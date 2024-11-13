@@ -10,7 +10,7 @@ export function getCityInfo (params) {
     })
 }
 
-// 实时天气预报，目前403
+// 实时天气预报，免费可用
 export function getWeatherInfo (params) {
     return axiosInstance({
         url: '/v7/weather/now',
@@ -29,13 +29,12 @@ export function getAirInfo (params) {
     })
 }
 
-// 太阳辐射（紫外线）
+// 太阳辐射（紫外线），免费的403
 export function getUltravioletInfo (params) {
     return axiosInstance({
-        url: 'v7/solar-radiation/24h',
+        url: '/v7/solar-radiation/24h',
         params,
-        method: 'get',
-        baseURL: 'https://api.qweather.com',
+        method: 'get'
     })
 }
 
@@ -48,12 +47,11 @@ export function getForecastInfo (params) {
     })
 }
 
-// 昨日天气预报
+// 昨日天气预报，免费的403
 export function getPreForecastInfo (params) {
     return axiosInstance({
         url: '/v7/historical/weather',
         params,
-        method: 'get',
-        baseURL: 'https://api.qweather.com', // 和风天气api
+        method: 'get'
     })
 }
